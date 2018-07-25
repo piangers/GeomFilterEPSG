@@ -8,27 +8,55 @@ from qgis.gui import QgsMapToolEmitPoint, QgsRubberBand, QgsMapTool
 
 class GeomFilterEPSG():
     
-    
-	# Create new virtual layer 
-	vlyr = QgsVectorLayer("Polygon", "temporary_polygons", "memory")
-	dprov = vlyr.dataProvider()
 
-	# Add field to virtual layer 
-	dprov.addAttributes([QgsField("name", QVariant.String),
-		             QgsField("size", QVariant.Double)])
+	def __init__(self, iface):
+        
+        self.iface = iface
+        
+    def initGui(self): 
 
-	vlyr.updateFields()
+        self.toolbar = self.iface.addToolBar("My_ToolBar")
+        # cria uma ação que iniciará a configuração do plugin 
+        pai = self.iface.mainWindow()
+        icon_path = ':/plugins/MeasureArea/icon.png'
+        self.action = QAction (QIcon (icon_path),u"Calcula em metros quadrados, tamanho da area ou areas.", pai)
+        self.action.setObjectName ("Retorna a area do poligono.")
+        self.action.setStatusTip(None)
+        self.action.setWhatsThis(None)
+        self.action.setCheckable(True)
+        #Padrões fixados
+        self.textbox = QLineEdit(self.iface.mainWindow())
+        # Set width
+        self.textbox.setFixedWidth(120)
+        # Add textbox to toolbar
+        self.toolbar.addAction(self.action)
+        self.toolbar.addWidget(self.textbox)
+        # Set tooltip
+        self.action.toggled.connect(self.enableElements)
+        self.enableElements(False)
+        self.textbox.textChanged.connect(self.enableTool) # acho que é aqui o sinal a ser trabalhado
+        self.action.toggled.connect(self.enableTool)                                           
+  
+		# Create new virtual layer 
+		vlyr = QgsVectorLayer("Polygon", "temporary_polygons", "memory")
+		dprov = vlyr.dataProvider()
 
-	# Access MapTool  
-	previousMapTool = iface.mapCanvas().mapTool()
-	myMapTool = QgsMapToolEmitPoint( iface.mapCanvas() )
+		# Add field to virtual layer 
+		dprov.addAttributes([QgsField("name", QVariant.String),
+						QgsField("size", QVariant.Double)])
+
+		vlyr.updateFields()
+
+		# Access MapTool  
+		previousMapTool = iface.mapCanvas().mapTool()
+		myMapTool = QgsMapToolEmitPoint( iface.mapCanvas() )
 
 
-	# create empty list to store coordinates 
-	coordinates = []
+		# create empty list to store coordinates 
+		coordinates = []
 
-	# Access ID 
-	fields = dprov.fields() 
+		# Access ID 
+		fields = dprov.fields() 
 
 	def drawBand( currentPos, clickedButton ):
 	    iface.mapCanvas().xyCoordinates.connect( drawBand )
@@ -85,6 +113,7 @@ class GeomFilterEPSG():
 		#delete list
 		del coordinates[:]
 
+    
 
 	myMapTool.canvasClicked.connect( mouseClick )
 	iface.mapCanvas().setMapTool( myMapTool )
