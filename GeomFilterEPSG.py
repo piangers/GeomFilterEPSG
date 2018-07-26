@@ -2,7 +2,7 @@
 
 from PyQt4.QtCore import *
 from PyQt4.QtGui import QColor, QInputDialog, QLineEdit
-from qgis.core import QGis, QgsMapLayerRegistry, QgsDistanceArea, QgsFeature, QgsPoint, QgsGeometry
+from qgis.core import QGis, QgsMapLayerRegistry, QgsDistanceArea, QgsFeature, QgsPoint, QgsGeometry, QgsField, QgsVectorLayer  
 from qgis.gui import QgsMapToolEmitPoint, QgsRubberBand, QgsMapTool
 
 
@@ -10,7 +10,6 @@ class GeomFilterEPSG():
     
 
 	def __init__(self, iface):
-		
 		self.iface = iface
 		
 	def initGui(self): 
@@ -25,94 +24,106 @@ class GeomFilterEPSG():
         self.action.setWhatsThis(None)
         self.action.setCheckable(True)
         #Padrões fixados
-        self.textbox = QLineEdit(self.iface.mainWindow())
-        # Set width
-        self.textbox.setFixedWidth(120)
+        
         # Add textbox to toolbar
         self.toolbar.addAction(self.action)
-		
-        self.toolbar.addWidget(self.textbox)
-        # Set tooltip
+
         self.action.toggled.connect(self.enableElements)
         self.enableElements(False)
-        self.textbox.textChanged.connect(self.enableTool) # acho que é aqui o sinal a ser trabalhado
-        self.action.toggled.connect(self.enableTool)                                           
 		
-		
-		
-		# Create new virtual layer 
 
-	self.vlyr = QgsVectorLayer("Polygon?crs=EPSG:31982", "temporary_polygons", "memory")
-	self.dprov = self.vlyr.dataProvider()
 
-		# Add field to virtual layer 
-	self.dprov.addAttributes([QgsField("name", QVariant.String),
-							QgsField("size", QVariant.Double)])
 
-	self.vlyr.updateFields()
 
-	self.myRubberBand = QgsRubberBand( iface.mapCanvas(), QGis.Polygon )
-	self.color = QColor(78, 97, 114)
-	self.color.setAlpha(190)
-	self.myRubberBand.setColor(color)
-				
-		# Access MapTool  
-	self.previousMapTool = iface.mapCanvas().mapTool()
-	self.myMapTool = QgsMapToolEmitPoint( iface.mapCanvas() )
+	vlyr = QgsVectorLayer("Polygon?crs=EPSG:31982", "temporary_polygons", "memory")
+	dprov = vlyr.dataProvider()
 
-		# VALORES ANTES PASSADOS EM FORMA DE SCRIPT
-	self.myMapTool.canvasClicked.connect( mouseClick )
-	self.iface.mapCanvas().setMapTool( myMapTool )
+	# Add field to virtual layer 
+	dprov.addAttributes([QgsField("name", QVariant.String),
+						QgsField("size", QVariant.Double)])
 
-		# create empty list to store coordinates 
+	vlyr.updateFields()
+
+	myRubberBand = QgsRubberBand( self.iface.mapCanvas(), QGis.Polygon )
+	color = QColor(78, 97, 114)
+	color.setAlpha(190)
+	myRubberBand.setColor(color)
+	myRubberBand.setFillColor(QColor(255, 0, 0, 40))
+	myRubberBand.setBorderColor(QColor(255, 0, 0, 200))
+	# Access MapTool  
+	previousMapTool = self.iface.mapCanvas().mapTool()
+	myMapTool = QgsMapToolEmitPoint( self.iface.mapCanvas() )
+	isEditing = 0
+	# create empty list to store coordinates 
 	coordinates = []
-
-		# Access ID 
-	self.fields = self.dprov.fields() 
-
-	def drawBand( currentPos, clickedButton ):
-		self.iface.mapCanvas().xyCoordinates.connect( drawBand )
-
-		if self.myRubberBand and self.myRubberBand.numberOfVertices():
-			self.myRubberBand.removeLastPoint()
-			self.myRubberBand.addPoint( QgsPoint(currentPos) )
+	# Access ID 
+	fields = dprov.fields() 
 
 
-	def mouseClick( currentPos, clickedButton ):
-		if clickedButton == Qt.LeftButton:# and myRubberBand.numberOfVertices() == 0: 
-			myRubberBand.addPoint( QgsPoint(currentPos) )
-			
-		elif clickedButton == Qt.RightButton and myRubberBand.numberOfVertices() > 3:
+def disconect(self):
 
-			# open input dialog     
-			(description, False) = QInputDialog.getText(iface. mainWindow(), "Description", "Description for Polygon at x and y", QLineEdit.Normal, 'My Polygon') 
-
-			#create feature and set geometry             
-			poly = QgsFeature() 
-			geomP = myRubberBand.asGeometry()
-			poly.setGeometry(geomP) 
-			
-			print myRubberBand.numberOfVertices()
-
-			#set attributes
-			indexN = dprov.fieldNameIndex('name') 
-			indexA = dprov.fieldNameIndex('size') 
-			poly.setAttributes([QgsDistanceArea().measurePolygon(coordinates), indexA])
-			poly.setAttributes([description, indexN])
-
-			# add feature                 
-			self.dprov.addFeatures([poly])
-			self.vlyr.updateExtents()
-
-			#add layer      
-			self.vlyr.triggerRepaint()
-			QgsMapLayerRegistry.instance().addMapLayers([vlyr])
-			self.myRubberBand.reset(QGis.Polygon)
-
-#myMapTool.canvasClicked.connect( mouseClick )
-#iface.mapCanvas().setMapTool( myMapTool )
+	self.iface.mapCanvas().unsetMapTool(self.myMapTool)
+	self.iface.mapCanvas().xyCoordinates.disconnect (mouseMove)
+	self.myRubberBand.reset()
 
 
-    
+def unChecked(self):
+	pass
 
+def unload(self):
+	pass
+
+
+def drawBand( currentPos, clickedButton ):
+    self.iface.mapCanvas().xyCoordinates.connect( drawBand )
+
+    if myRubberBand and myRubberBand.numberOfVertices():
+        myRubberBand.removeLastPoint()
+        myRubberBand.addPoint( QgsPoint(currentPos) )
+
+
+def mouseClick( currentPos, clickedButton ):
+    global isEditing
+    if clickedButton == Qt.LeftButton:# and myRubberBand.numberOfVertices() == 0: 
+        myRubberBand.addPoint( QgsPoint(currentPos) )
+        isEditing = 1
+        
+    elif clickedButton == Qt.RightButton and myRubberBand.numberOfVertices() > 2:
+        isEditing = 0
+        
+        # open input dialog     
+        (description, False) = QInputDialog.getText(iface. mainWindow(), "Description", "Description for Polygon at x and y", QLineEdit.Normal, 'My Polygon') 
+
+        #create feature and set geometry             
+        poly = QgsFeature() 
+        geomP = myRubberBand.asGeometry()
+        poly.setGeometry(geomP) 
+        print geomP.exportToWkt()
+        
+        #set attributes
+        indexN = dprov.fieldNameIndex('name') 
+        indexA = dprov.fieldNameIndex('size') 
+        poly.setAttributes([QgsDistanceArea().measurePolygon(coordinates), indexA])
+        poly.setAttributes([description, indexN])
+
+        # add feature                 
+        dprov.addFeatures([poly])
+        vlyr.updateExtents()
+
+        #add layer      
+        vlyr.triggerRepaint()
+        QgsMapLayerRegistry.instance().addMapLayers([vlyr])
+        myRubberBand.reset(QGis.Polygon)
+
+def mouseMove( currentPos ):
+    global isEditing
+    if isEditing == 1:
+        myRubberBand.movePoint( QgsPoint(currentPos) )
+
+# myMapTool.canvasClicked.connect( mouseClick )
+# iface.mapCanvas().xyCoordinates.connect( mouseMove )
+
+# iface.mapCanvas().setMapTool( myMapTool )
+
+		
 	
