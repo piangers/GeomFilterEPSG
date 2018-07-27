@@ -37,17 +37,7 @@ class GeomFilterEPSG():
         self.previousMapTool = self.iface.mapCanvas().mapTool()
         self.myMapTool = QgsMapToolEmitPoint( self.iface.mapCanvas() )
         self.isEditing = 0
-        
-        # self.vlyr = QgsVectorLayer("Polygon?crs=EPSG:31982", "temporary_polygons", "memory")
-        # self.dprov = self.vlyr.dataProvider()
-
-        # # Add field to virtual layer 
-        # self.dprov.addAttributes([QgsField("name", QVariant.String),
-        #                     QgsField("size", QVariant.Double)])
-
-        # self.vlyr.updateFields()
-        # Access ID 
-        # self.fields = self.dprov.fields()
+       
 
     def initSignals(self):
         self.action.toggled.connect(self.RubberBand)
@@ -104,20 +94,9 @@ class GeomFilterEPSG():
             geomP = self.myRubberBand.asGeometry()
             poly.setGeometry(geomP) 
             print geomP.exportToWkt()
+            print geomP.crs().authid()
             
-            #set attributes
-            # indexN = self.dprov.fieldNameIndex('name') 
-            # indexA = self.dprov.fieldNameIndex('size') 
-            # poly.setAttributes([QgsDistanceArea().measurePolygon(self.coordinates), indexA])
-            # poly.setAttributes([description, indexN])
-
-            # add feature                 
-            # self.dprov.addFeatures([poly])
-            # self.vlyr.updateExtents()
-
-            #add layer      
-            # self.vlyr.triggerRepaint()
-            # QgsMapLayerRegistry.instance().addMapLayers([self.vlyr])
+            
             self.myRubberBand.reset(QGis.Polygon)
 
     def mouseMove( self, currentPos ):
