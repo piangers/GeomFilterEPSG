@@ -43,8 +43,8 @@ class GeomFilterEPSG():
         self.action.toggled.connect(self.RubberBand)
         self.myMapTool.canvasClicked.connect( self.mouseClick )
 
-    def RubberBand(self, b):
-        if b:
+    def RubberBand(self, bolean):
+        if bolean:
             self.myRubberBand = QgsRubberBand( self.iface.mapCanvas(), QGis.Polygon )
             color = QColor(78, 97, 114)
             color.setAlpha(190)
@@ -87,16 +87,29 @@ class GeomFilterEPSG():
             self.isEditing = 0
             
             # open input dialog     
-            #(description, False) = QInputDialog.getText(self.iface.mainWindow(), "Description", "Description for Polygon at x and y", QLineEdit.Normal, 'My Polygon') 
+            (description, False) = QInputDialog.getText(self.iface.mainWindow(), "Description", "Description for Polygon at x and y", QLineEdit.Normal, 'My Polygon') 
 
             #create feature and set geometry             
             poly = QgsFeature() 
             geomP = self.myRubberBand.asGeometry()
-            poly.setGeometry(geomP) 
-            print geomP.exportToWkt()
-            print geomP.crs().authid()
+            poly.setGeometry(geomP)
+            g=geomP.exportToWkt()
+            #print g
+            canvas=self.iface.mapCanvas()
+            c=canvas.mapRenderer().destinationCrs().authid()
+            rep = c.replace("EPSG:","")
+            print "\n"
+            
+            string = U"st_intersects(geom,st_geomfromewkt('SRID="+rep+";"+g+"'))"
+            print string
             
             
+            # layers = iface.mapCanvas().layers()
+            # for layer in layers:
+            #    layer.setSubsetString('"Art" = \'Ki\'')
+            
+            # print layers
+
             self.myRubberBand.reset(QGis.Polygon)
 
     def mouseMove( self, currentPos ):
