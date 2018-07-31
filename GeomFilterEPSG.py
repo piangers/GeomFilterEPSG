@@ -4,7 +4,7 @@ from PyQt4.QtCore import *
 from PyQt4.QtGui import QColor, QInputDialog, QLineEdit, QAction, QIcon
 from qgis.core import QGis, QgsMapLayerRegistry, QgsDistanceArea, QgsFeature, QgsPoint, QgsGeometry, QgsField, QgsVectorLayer  
 from qgis.gui import QgsMapToolEmitPoint, QgsRubberBand, QgsMapTool
-
+import resources_rc
 
 class GeomFilterEPSG():
     
@@ -72,7 +72,8 @@ class GeomFilterEPSG():
             pass
 
     def unChecked(self):
-        pass
+        self.action.setCheckable(False)
+        self.action.setCheckable(True)
 
     def unload(self):
         self.disconnect()        
@@ -86,9 +87,6 @@ class GeomFilterEPSG():
         elif clickedButton == Qt.RightButton and self.myRubberBand.numberOfVertices() > 2:
             self.isEditing = 0
             
-            # open input dialog     
-            #(description, False) = QInputDialog.getText(self.iface.mainWindow(), "Description:", "For Polygon", QLineEdit.Normal, 'Polygon') 
-
             # create feature and set geometry.
                     
             poly = QgsFeature() 
@@ -109,6 +107,8 @@ class GeomFilterEPSG():
             
 
             self.myRubberBand.reset(QGis.Polygon)
+            self.disconnect()
+            self.unChecked()
 
     def mouseMove( self, currentPos ):
         if self.isEditing == 1:
