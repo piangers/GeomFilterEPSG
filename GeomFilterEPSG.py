@@ -87,7 +87,7 @@ class GeomFilterEPSG():
             self.isEditing = 0
             
             # open input dialog     
-            (description, False) = QInputDialog.getText(self.iface.mainWindow(), "Description", "Description for Polygon at x and y", QLineEdit.Normal, 'My Polygon') 
+            #(description, False) = QInputDialog.getText(self.iface.mainWindow(), "Description:", "For Polygon", QLineEdit.Normal, 'Polygon') 
 
             #create feature and set geometry             
             poly = QgsFeature() 
@@ -102,13 +102,17 @@ class GeomFilterEPSG():
             
             string = U"st_intersects(geom,st_geomfromewkt('SRID="+rep+";"+g+"'))"
             print string
+           
+            self.layers = self.iface.mapCanvas().layers()
             
+            for layer in self.layers:
+                layer.setSubsetString(string)
             
             # layers = iface.mapCanvas().layers()
             # for layer in layers:
             #    layer.setSubsetString('"Art" = \'Ki\'')
             
-            # print layers
+           
 
             self.myRubberBand.reset(QGis.Polygon)
 
